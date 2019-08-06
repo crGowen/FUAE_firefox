@@ -1,0 +1,30 @@
+{
+   "manifest_version": 2,
+   "name": "Fast Umlauts and Eszetts",
+   "version": "1.0",
+
+   "description": "When enabled, as you type A'', a'', O'', o'', U'', u'', s'' [NOT a speechmark, two apostrophes] they are automatically converted to Ä, ä, Ö, ö, Ü, ü, ß respectively.",
+
+   "icons": {"48": "icons/FUAE_48.png"},
+
+   "background": {
+      "scripts": ["background.js"]
+   },
+
+   "browser_action": {
+      "browser_style": true,
+      "default_popup": "popup/popup.html",
+      "default_icon": {"16": "icons/FUAE_16.png", "32": "icons/FUAE_32.png"}
+   },
+
+   "web_accessible_resources": [
+      "statusIcons/FUAE_48G",
+      "statusIcons/FUAE_48R"
+   ],
+
+   "content_scripts": [{
+      "js":["fuae.js"],
+      "all_frames": false,
+      "matches": ["<all_urls>"]
+      }]
+}
