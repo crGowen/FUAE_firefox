@@ -3,7 +3,7 @@
    "name": "Fast Umlauts and Eszetts",
    "version": "1.0",
 
-   "description": "As you type A'', a'', O'', o'', U'', u'', s'' [two apostrophes] they are automatically converted to Ä, ä, Ö, ö, Ü, ü, ß respectively. E.g. 'Ko''nigreich' is converted to 'Königreich'.",
+   "description": "As you type A'', a'', O'', o'', U'', u'', s'' (two apostrophes) they are automatically converted to Ä, ä, Ö, ö, Ü, ü, ß respectively. E.g. 'Ko''nigreich' is converted to 'Königreich'.",
 
    "icons": {"48": "icons/FUAE_48.png"},
 
