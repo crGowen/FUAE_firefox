@@ -14,3 +14,9 @@ function handleMsg(msg, sender, sendResponse) {
    }
 }
 browser.runtime.onMessage.addListener(handleMsg);
+
+browser.commands.onCommand.addListener(function (command) {
+   if (command === "toggle-FUAE") {
+      bgActive = !bgActive;
+   }
+});
