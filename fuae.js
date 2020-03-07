@@ -60,6 +60,8 @@ function checkTextForChange(){
          document.getElementById("fuaeIndicatorIcon").src = browser.runtime.getURL("statusIcons/FUAE_48G.png");
          document.activeElement.value = parseText(document.activeElement.value);
          textSincePreviousParse = document.activeElement.value;
+         var evt = new Event("input", {"bubbles":true, "cancelable":true});
+         setTimeout(()=>{document.activeElement.dispatchEvent(evt);}, 200);
       } else {
          document.getElementById("fuaeIndicatorIcon").src = browser.runtime.getURL("statusIcons/FUAE_48R.png");
       }
