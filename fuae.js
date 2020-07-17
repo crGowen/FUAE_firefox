@@ -1,10 +1,4 @@
 class Fuae {
-   static indicator;
-   static textSincePreviousParse;
-   static textSincePreviousTick;
-   static tick;
-   static sender;
-
    // a "tick" is just a 1.2 second interval, once per tick get the status of the extension (communication with background) and deal with the response in handleResponse(msg) function
    static tickInterval() {
       Fuae.sender = browser.runtime.sendMessage({fuaeReq: "requestStatus"});

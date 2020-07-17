@@ -1,7 +1,4 @@
 class FuaePopup {
-   static isActive;
-   static sender;
-
    static init() {
       FuaePopup.isActive = false;
 

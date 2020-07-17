@@ -2,8 +2,6 @@
 // (e.g. user sets the extension to OFF or ON in the popup window) - background.js here provides a simple interface for the status to be communicated to instances of the FUAE running in tabs
 
 class FuaeBackground {
-   static bgActive;
-
    static handleMsg(msg, sender, sendResponse) {
       if (msg.fuaeReq) {
          if (FuaeBackground.bgActive) {
