@@ -1,78 +1,121 @@
-var indicator;
+class Fuae {
+   static indicator;
+   static textSincePreviousParse;
+   static textSincePreviousTick;
+   static tick;
+   static sender;
 
-if (document.getElementById("fuaeIndicatorIcon")) {
-   indicator = true;
-} else {
-   indicator = false;
-}
-
-var textSincePreviousParse = "";
-var textSincePreviousTick = "";
-
-var tick = setInterval(function() {
-   var sender = browser.runtime.sendMessage({fuaeReq: "requestStatus"});
-   sender.then(handleResponse, function(msg) {
-      console.log("error");
-      console.log(msg);
-   });
-}, 1200);
-
-function handleResponse(msg){
-   if(msg.fuaeActive=="t"){
-      monitorText();
-   } else if(indicator){
-      removeIndicator();
-      indicator = false;
+   // a "tick" is just a 1.2 second interval, once per tick get the status of the extension (communication with background) and deal with the response in handleResponse(msg) function
+   static tickInterval() {
+      Fuae.sender = browser.runtime.sendMessage({fuaeReq: "requestStatus"});
+      Fuae.sender.then(Fuae.handleResponse, (msg) => console.error(msg));
+      Fuae.tick = setTimeout(Fuae.tickInterval, 1200);
    }
-}
 
-function monitorText(){
-   if(document.activeElement.nodeName=="INPUT") {
-      if (document.activeElement.type=="text") {
-         if (!indicator) {
-            addIndicator();
+   // function for communication with the background, in short it checks if the user has the extension set to ON or OFF in the popup
+   static handleResponse(msg) {
+      if(msg.fuaeActive=="t"){
+         Fuae.monitorText();
+      } else if(Fuae.indicator){
+         Fuae.removeIndicator();
+      }
+   }
+
+   // add the indicator icon the textbox
+   static addIndicator() {
+      if (Fuae.indicator) return;
+
+      var pos = document.activeElement.getBoundingClientRect();   
+      var ind = document.createElement("img");
+
+      ind.id = "fuaeIndicatorIcon";
+      ind.style.display = "block";
+      ind.style.position = "absolute";
+      ind.style.top = pos.top + 5 + window.scrollY + "px";
+      ind.style.left = pos.right - 20 + window.scrollX + "px";
+      ind.style.width = "15px";
+      ind.style.height = "15px";
+      ind.style.borderRadius = "2px";
+      ind.style.zIndex = 900000000;
+      ind.style.opacity = 0.4;
+   
+      document.body.appendChild(ind);
+
+      Fuae.indicator = true;
+   }
+
+   // remove the indicator icon the textbox
+   static removeIndicator(){
+      if (!Fuae.indicator) return;
+
+      var ind = document.getElementById("fuaeIndicatorIcon");
+      ind.parentNode.removeChild(ind);
+
+      Fuae.indicator = false;
+   }
+
+   // each tick, if the user background reports the extension is active, and if the current active element in the DOM is a valid text field,
+   // then the indicator icon should be displayed in the top-right of the text field, and call the function checkTextForChange()
+   static monitorText(){
+      if (document.activeElement.nodeName=="BODY") {
+         Fuae.removeIndicator();
+         return;
+      }
+
+      if (document.activeElement.nodeName=="INPUT") {
+         if (document.activeElement.type!="text" && document.activeElement.type!="search") {
+            Fuae.removeIndicator();
+            return;
          }
-         checkTextForChange();
-         indicator = true;
+      } else if (document.activeElement.nodeName!="TEXTAREA" && !document.activeElement.contentEditable == "true") {
+         Fuae.removeIndicator();
+         return;
+      }
+      
+      Fuae.addIndicator();
+      Fuae.checkTextForChange();
+   }
+
+   static updateText() {
+      if (document.activeElement.nodeName=="TEXTAREA" || document.activeElement.nodeName=="INPUT") {
+         document.activeElement.value = Fuae.parseText(document.activeElement.value);
       } else {
-         if(indicator) {
-            removeIndicator();
-         }
-         indicator = false;
+         document.activeElement.innerText = Fuae.parseText(document.activeElement.innerText);
       }
-   } else if (document.activeElement.nodeName=="TEXTAREA") {
-      if (!indicator) {
-         addIndicator();
-      }
-      checkTextForChange();
-      indicator = true;
-   } else {
-      if(indicator) {
-         removeIndicator();
-      }
-      indicator = false;
    }
-}
 
-function checkTextForChange(){
-   if (document.activeElement.value!=textSincePreviousParse){
-      if (document.activeElement.value==textSincePreviousTick) {
+   static getText() {
+      if (document.activeElement.nodeName=="TEXTAREA" || document.activeElement.nodeName=="INPUT") {
+         return document.activeElement.value;
+      } else {
+         return document.activeElement.innerText;
+      }
+   }
+
+   // if the text has changed since the previous parse, but the text has not changed since the last two ticks (indicating the user has typed out some characters and now paused) then parse the text
+   // if the text has changed since the previous parse, as well as changed since the last tick (indicating the user is currently typing out some characters), set the indicator to orange and do nothing else
+   // in short: do NOT intrude on the user while they are typing, wait for them to pause before parsing the text to Russian characters
+   static checkTextForChange() {
+      if (Fuae.getText()!=Fuae.textSincePreviousParse){
+         if (Fuae.getText()==Fuae.textSincePreviousTick) {
+            document.getElementById("fuaeIndicatorIcon").src = browser.runtime.getURL("statusIcons/FUAE_48G.png");
+            Fuae.updateText();
+            Fuae.textSincePreviousParse = Fuae.getText();
+            let evt = new Event("input", {"bubbles":true, "cancelable":true});
+            setTimeout(()=>document.activeElement.dispatchEvent(evt), 200);
+         } else {
+            document.getElementById("fuaeIndicatorIcon").src = browser.runtime.getURL("statusIcons/FUAE_48R.png");
+         }
+      } else {
          document.getElementById("fuaeIndicatorIcon").src = browser.runtime.getURL("statusIcons/FUAE_48G.png");
-         document.activeElement.value = parseText(document.activeElement.value);
-         textSincePreviousParse = document.activeElement.value;
-         var evt = new Event("input", {"bubbles":true, "cancelable":true});
-         setTimeout(()=>{document.activeElement.dispatchEvent(evt);}, 200);
-      } else {
-         document.getElementById("fuaeIndicatorIcon").src = browser.runtime.getURL("statusIcons/FUAE_48R.png");
       }
-   } else {
-      document.getElementById("fuaeIndicatorIcon").src = browser.runtime.getURL("statusIcons/FUAE_48G.png");
-   }
-   textSincePreviousTick = document.activeElement.value;
-}
 
-function parseText(text) {
-   var retStr = "";
+      Fuae.textSincePreviousTick = Fuae.getText();
+   }
+
+   // parse latin characters to russian characters based on their phonetic
+   static parseText(text) {
+      var retStr = "";
 
    var i;
    for (i = 0; i < text.length; i++) {
@@ -171,27 +214,21 @@ function parseText(text) {
       }
    }
    return retStr;
+   }
+
+   static init() {
+      Fuae.textSincePreviousParse = "";
+      Fuae.textSincePreviousTick = "";
+
+      // check if there is an existing indicator icon
+      if (document.getElementById("fuaeIndicatorIcon")) {
+         Fuae.indicator = true;
+      } else {
+         Fuae.indicator = false;
+      }
+
+      Fuae.tickInterval();
+   }
 }
 
-function addIndicator() {
-   var pos = document.activeElement.getBoundingClientRect();
-
-   var ind = document.createElement("img");
-   ind.id = "fuaeIndicatorIcon";
-   ind.style.display = "block";
-   ind.style.position = "absolute";
-   ind.style.top = pos.top + 5 + window.scrollY + "px";
-   ind.style.left = pos.right - 20 + window.scrollX + "px";
-   ind.style.width = "15px";
-   ind.style.height = "15px";
-   ind.style.borderRadius = "2px";
-   ind.style.zIndex = 800;
-   ind.style.opacity = 0.4;
-
-   document.body.appendChild(ind);
-}
-
-function removeIndicator(){
-   var ind = document.getElementById("fuaeIndicatorIcon");
-   ind.parentNode.removeChild(ind);
-}
+Fuae.init();
