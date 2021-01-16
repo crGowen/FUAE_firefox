@@ -57,17 +57,19 @@ class Fuae {
       }
 
       if (document.activeElement.nodeName=="INPUT") {
-         if (document.activeElement.type!="text" && document.activeElement.type!="search") {
-            Fuae.removeIndicator();
+         if (document.activeElement.type=="text" || document.activeElement.type=="search") {
+            Fuae.addIndicator();
+            Fuae.checkTextForChange();
             return;
          }
-      } else if (document.activeElement.nodeName!="TEXTAREA" && !document.activeElement.contentEditable == "true") {
-         Fuae.removeIndicator();
+      } else if (document.activeElement.nodeName=="TEXTAREA" || document.activeElement.contentEditable == "true") {
+         Fuae.addIndicator();
+         Fuae.checkTextForChange();
          return;
       }
-      
-      Fuae.addIndicator();
-      Fuae.checkTextForChange();
+      else {
+         Fuae.removeIndicator();
+      }
    }
 
    static updateText() {
